@@ -1,0 +1,44 @@
+{
+  "name": "beconnected",
+  "version": "0.3.2",
+  "packageManager": "pnpm@9.2.0",
+  "engines": {
+    "node": ">=20.10.0 <21.0.0"
+  },
+  "scripts": {
+    "sst:start": "sst dev",
+    "ngrok:start": "npx tsx scripts/start-ngrok.ts",
+    "frontend:start": "cd frontend && pnpm dev",
+    "build": "sst build",
+    "deploy": "sst deploy",
+    "remove": "sst remove",
+    "console": "sst console",
+    "typecheck": "tsc --noEmit",
+    "pretest": "npm run lint",
+    "test": "sst load-config -- vitest run",
+    "posttest": "npm run format",
+    "test-watch": "sst load-config -- vitest watch",
+    "lint": "biome lint --write .",
+    "lint:staged": "biome check --error-on-warnings --no-errors-on-unmatched --staged --write",
+    "format": "biome format --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.8.3",
+    "@ngrok/ngrok": "^1.4.1",
+    "aws-cdk-lib": "^2.95.1",
+    "constructs": "^10.2.70",
+    "dotenv": "^16.3.1",
+    "got": "^12.6.1",
+    "husky": "^9.1.4",
+    "hygen": "6.2.11",
+    "sst": "^2.25.0",
+    "tsx": "^4.17.0",
+    "typescript": "~5.1.0",
+    "vitest": "^0.22.1"
+  },
+  "dependencies": {
+    "@slack/bolt": "^3.13.3",
+    "@tsconfig/node20": "^20.1.4",
+    "axios": "^0.27.2"
+  }
+}
