@@ -25,7 +25,7 @@ export function MyStack({ stack, app }: StackContext) {
     UPLOAD_EXPIRES,
   ];
 
-  const bucket = new Bucket(stack, 'beconnected-bucket', {
+  const bucket = new Bucket(stack, 'my-beconnected-bucket', {
     cdk: {
       bucket: {
         autoDeleteObjects: true,
