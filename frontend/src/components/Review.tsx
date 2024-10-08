@@ -12,6 +12,12 @@ export const Review: React.FC = () => {
     dispatchAppStateAction({
       type: TakePhotoActions.START_UPLOAD,
     });
+  
+  const reCaptureEnv = () =>
+    dispatchAppStateAction({
+      type: TakePhotoActions.INITIALIZED,
+    });
+
 
   return (
     <Container>
@@ -19,9 +25,12 @@ export const Review: React.FC = () => {
         <Box>
           <MergedImage backImage={appState.environmentImage} />
         </Box>
-        <HStack p={4}>
+        <HStack p={4} spacing={4}>
           <Button size="lg" onClick={uploadMoment} colorScheme="teal">
             Post
+          </Button>
+          <Button size="lg" onClick={reCaptureEnv} colorScheme="red">
+            Retake
           </Button>
         </HStack>
       </VStack>
