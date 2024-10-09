@@ -7,6 +7,7 @@ import {
   StackContext,
   StaticSite,
   use,
+  Api
 } from 'sst/constructs';
 
 import ConfigStack from './ConfigStack';
@@ -70,6 +71,29 @@ export function MyStack({ stack, app }: StackContext) {
     },
     permissions: '*',
   };
+
+  const slackCommandsApi = new Api(stack, 'Api', {
+    routes: {
+      'POST /slack/capture-now': {
+        function: {
+          handler: 'services/lambdas/cron.handler',
+          timeout: 15,
+          environment: {
+            flowStartQueueUrl: flowStartQueue.queueUrl,
+            cloudwatchRuleName: dailyNotificationRuleName,
+          },
+          permissions: '*',
+        },
+      },
+    },
+    cors: {
+      allowMethods: ['POST'],
+      allowOrigins: ['*'],
+    },
+  });
+  stack.addOutputs({
+    SlackCommandAPI: slackCommandsApi.url,
+  });
 
   new Cron(stack, 'Cron', {
     schedule: 'rate(1 minute)',
