@@ -43,8 +43,8 @@ export const MomentContextProvider: React.FC<{ children: ReactNode }> = ({
   const s3UploadUrl = getS3UrlFromUrl();
 
   useEffect(() => {
-    if (appState.step === TakePhotoSteps.Uploading) {
-      postImage()
+    if (appState.step === TakePhotoSteps.Uploading && s3UploadUrl) {
+      postImage(appState.environmentImage, s3UploadUrl)
         .then(() => {
           dispatchAppStateAction({ type: TakePhotoActions.UPLOAD_SUCCESS });
         })
