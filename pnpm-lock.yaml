@@ -69,6 +69,9 @@ importers:
       '@emotion/styled':
         specifier: ^11.10.0
         version: 11.13.0(@emotion/react@11.13.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1)
+      b64-to-blob:
+        specifier: ^1.2.19
+        version: 1.2.19
       framer-motion:
         specifier: ^7.2.1
         version: 7.10.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -2246,6 +2249,9 @@ packages:
 
   axios@1.7.4:
     resolution: {integrity: sha512-DukmaFRnY6AzAALSH4J2M3k6PkaC+MfaAGdEERRWcC9q3/TWQwLpHR8ZRLKTdQ3aBDL64EdluRDjJqKw+BPZEw==}
+
+  b64-to-blob@1.2.19:
+    resolution: {integrity: sha512-L3nSu8GgF4iEyNYakCQSfL2F5GI5aCXcot9mNTf+4N0/BMhpxqqHyOb6jIR24iq2xLjQZLG8FOt3gnUcV+9NVg==}
 
   babel-plugin-macros@3.1.0:
     resolution: {integrity: sha512-Cg7TFGpIr01vOQNODXOOaGz2NpCU5gl8x1qJFbb6hbZxR7XrcE2vtbAsTAbJ7/xwJtUuJEw8K8Zr/AE0LHlesg==}
@@ -8059,6 +8065,8 @@ snapshots:
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
+
+  b64-to-blob@1.2.19: {}
 
   babel-plugin-macros@3.1.0:
     dependencies:
