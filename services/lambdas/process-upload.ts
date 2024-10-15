@@ -13,12 +13,13 @@ export const handler: S3Handler = async (event) => {
       // Download blob image form S3 bucket
       const s3Object = await downloadPhotoFromBucket(record.s3.object.key, bucketName);
       const metadata = s3Object.Metadata as S3ImageMetaData
-      const region = process.env.AWS_REGION
+      const region = String(process.env.AWS_REGION)
+      const clientSlackSecret = String(process.env.SLACK_SIGNING_SECRET)
       const imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${objectKey}`;
 
       // Post image in related thread
       await sendImageInReplyMessage({
-        clientSlackSecret: String(process.env.SLACK_SIGNING_SECRET),
+        clientSlackSecret,
         userId: metadata.userid,
         messageHeader: ' - Thanks for your capture',
         channelId: metadata.clientchannelid,

@@ -1,12 +1,12 @@
-import { SQSHandler } from 'aws-lambda';
-import { S3, SQS } from 'aws-sdk';
-import { UploadLinkMessageBody, S3ImageMetaData } from './types';
+import { EventBridgeEvent, SQSHandler } from 'aws-lambda';
+import { EventBridge, S3, SQS } from 'aws-sdk';
+import { UploadLinkMessageBody, S3ImageMetaData, SendDmMessageBody } from './types';
+import { triggerEvent } from './utils';
 
-export const handler: SQSHandler = async (event) => {
-  for (const record of event.Records) {
-    const recordBody = JSON.parse(record.body) as UploadLinkMessageBody;
-    await createS3UploadLink(recordBody);
-  }
+export const handler = async (event: EventBridgeEvent<'UploadLink', UploadLinkMessageBody>) => {
+  const eventBusName = String(process.env.eventBusName)
+  const messageBody = await createS3UploadLink(event.detail);
+  await triggerEvent<SendDmMessageBody>(messageBody, 'sendDmMessageEvent', eventBusName)
 };
 
 const createS3UploadLink = async ({
@@ -16,10 +16,7 @@ const createS3UploadLink = async ({
   nextDate,
   clientChannelId,
 }: UploadLinkMessageBody) => {
-  const sendDmQueueUrl = String(process.env.sendDmQueueUrl);
   const bucketName = String(process.env.bucketName);
-
-  const queue = new SQS();
   const s3 = new S3();
   const timestamp = Date.now().toString();
 
@@ -42,14 +39,21 @@ const createS3UploadLink = async ({
     Metadata: metaData,
   });
 
-  await queue
-    .sendMessage({
-      QueueUrl: sendDmQueueUrl,
-      MessageBody: JSON.stringify({
-        clientSlackSecret,
-        userId,
-        uploadLink,
-      }),
-    })
-    .promise();
+  return { clientSlackSecret, userId, uploadLink } as SendDmMessageBody
 };
+
+// const triggerEvent = async (messageBody: SendDmMessageBody) => {
+//   const eventBusName = String(process.env.eventBusName)
+//   const eventBridge = new EventBridge();
+//   const params = {
+//     Entries: [
+//       {
+//         Source: 'sendDmMessageEvent',
+//         DetailType: 'sendDmMessageEventTriggered',
+//         Detail: JSON.stringify(messageBody),
+//         EventBusName: eventBusName,
+//       },
+//     ],
+//   };
+//   const result = await eventBridge.putEvents(params).promise();
+// }
