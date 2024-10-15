@@ -7,9 +7,8 @@ export const getS3UrlFromUrl = () => {
   return uploadUrl;
 };
 
-export const convertBase64ToBlob = (base64String: string) => {
-  const contentType = 'image/jpeg';
-  return b64toBlob(base64String, contentType);
+const convertBase64ToBlob = (base64String: string) => {
+  return b64toBlob(base64String, 'image/jpeg');
 };
 
 export const postImage = async (base64Image: string, s3UploadUrl: string) => {

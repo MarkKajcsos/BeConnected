@@ -26,6 +26,13 @@ export function MyStack({ stack, app }: StackContext) {
     UPLOAD_EXPIRES,
   ];
 
+  // queues
+  const flowStartQueue = new Queue(stack, 'flow-start-queue');
+  const createMomentQueue = new Queue(stack, 'create-moment-queue');
+  const channelUsersQueue = new Queue(stack, 'channel-users-queue');
+  const uploadLinkQueue = new Queue(stack, 'upload-link-queue');
+  const sendDmQueue = new Queue(stack, 'send-dm-queue');
+
   const bucket = new Bucket(stack, 'my-beconnected-bucket', {
     cdk: {
       bucket: {
@@ -40,6 +47,19 @@ export function MyStack({ stack, app }: StackContext) {
         allowedOrigins: ['*'],
       },
     ],
+    notifications: {
+      uploadNotification: {
+        function: {
+          // srcPath: "src/",
+          handler: "services/lambdas/process-upload.handler",
+          environment: { SLACK_SIGNING_SECRET: '801adc8c32e95bc2746de291c5f1f7d1' },
+          permissions: ['s3'],
+          bind
+        },
+        events: ["object_created"],
+        bind
+      },
+    },
   });
   bucket.attachPermissions([bucket]);
 
@@ -54,12 +74,6 @@ export function MyStack({ stack, app }: StackContext) {
         .public_url
     : site.url;
 
-  // queues
-  const flowStartQueue = new Queue(stack, 'flow-start-queue');
-  const createMomentQueue = new Queue(stack, 'create-moment-queue');
-  const channelUsersQueue = new Queue(stack, 'channel-users-queue');
-  const uploadLinkQueue = new Queue(stack, 'upload-link-queue');
-  const sendDmQueue = new Queue(stack, 'send-dm-queue');
 
   const dailyNotificationRuleName = `${app.stage}-daily-notification-rule`;
   const triggerMomentHandler: FunctionDefinition = {
@@ -90,9 +104,6 @@ export function MyStack({ stack, app }: StackContext) {
       allowMethods: ['POST'],
       allowOrigins: ['*'],
     },
-  });
-  stack.addOutputs({
-    SlackCommandAPI: slackCommandsApi.url,
   });
 
   new Cron(stack, 'Cron', {
@@ -167,5 +178,7 @@ export function MyStack({ stack, app }: StackContext) {
 
   stack.addOutputs({
     SiteUrl: siteUrl,
+    SlackCommandAPI: slackCommandsApi.url,
+    BucketName: bucket.bucketName,
   });
 }
