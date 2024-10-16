@@ -18,7 +18,7 @@ export const handler: S3Handler = async (event) => {
 
       // Post image in related thread
       await sendImageInReplyMessage({
-        clientSlackSecret: String(process.env.SLACK_SIGNING_SECRET),
+        clientSlackSecret: String(process.env.slackSigningSecret),
         userId: metadata.userid,
         messageHeader: ' - Thanks for your capture',
         channelId: metadata.clientchannelid,

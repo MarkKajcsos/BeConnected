@@ -1,30 +1,18 @@
-import { SQSHandler } from 'aws-lambda';
-import { SQS } from 'aws-sdk';
+import { EventBridgeEvent } from 'aws-lambda';
 import { createThread } from '../slack/createThread';
-import { CreateMomentMessageBody } from './types';
+import { ChannelUsersMessageBody, CreateMomentMessageBody } from './types';
+import { triggerEvent } from './utils';
 
-export const handler: SQSHandler = async (event) => {
-  for (const record of event.Records) {
-    const recordBody = JSON.parse(record.body) as CreateMomentMessageBody;
-    await createMoment(recordBody);
-  }
+export const handler = async (event: EventBridgeEvent<'CreateMoment', CreateMomentMessageBody>) => {
+  const eventBusName = String(process.env.eventBusName);
+  const messageBody = await createMoment(event.detail);
+  await triggerEvent(messageBody, 'channelUsersQueueUrlEvent', eventBusName)
 };
 
 const createMoment = async (recordBody: CreateMomentMessageBody) => {
-  const channelUsersQueueUrl = String(process.env.channelUsersQueueUrl);
-  const queue = new SQS();
-
   const response = await createThread(recordBody);
   if (!response || !response.ok || !response.ts) {
     throw new Error('Error creating message thread');
   }
-
-  const messageBody = { ...recordBody, threadId: response.ts };
-
-  await queue
-    .sendMessage({
-      QueueUrl: channelUsersQueueUrl,
-      MessageBody: JSON.stringify(messageBody),
-    })
-    .promise();
+  return { ...recordBody, threadId: response.ts } as ChannelUsersMessageBody;
 };

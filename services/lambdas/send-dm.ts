@@ -1,24 +1,15 @@
-import { SQSHandler } from 'aws-lambda';
+import { EventBridgeEvent } from 'aws-lambda';
 import { sendDmMessage } from 'slack/sendDmMessage';
 import { makeShortLinkText } from 'slack/utils';
 import { SendDmMessageBody } from './types';
 
-export const handler: SQSHandler = async (event) => {
-  for (const record of event.Records) {
-    const recordBody = JSON.parse(record.body) as SendDmMessageBody;
-    await sendDirectMessageToUser(recordBody);
-  }
-};
-
-const sendDirectMessageToUser = async (recordBody: SendDmMessageBody) => {
+export const handler = async (event: EventBridgeEvent<'SendDmMessage', SendDmMessageBody>) => {
   const siteUrl = String(process.env.siteUrl);
-
   const appUrl = `${siteUrl}?uploadUrl=${encodeURIComponent(
-    recordBody.uploadLink
+    event.detail.uploadLink
   )}`;
-
   const messageHeader = `, it is time to share your moment.`;
   const message = `Upload your moment: ${makeShortLinkText(appUrl, 'here.')}`;
 
-  await sendDmMessage({ ...recordBody, message, messageHeader });
+  await sendDmMessage({ ...event.detail, message, messageHeader });
 };

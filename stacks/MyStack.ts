@@ -7,10 +7,15 @@ import {
   StackContext,
   StaticSite,
   use,
-  Api
+  Api,
+  EventBus,
 } from 'sst/constructs';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 import ConfigStack from './ConfigStack';
+
+// TODO: move to .env or Config.secret
+const EVENT_BUS_NAME = "arn:aws:events:eu-central-1:307946669175:event-bus/markkajcsos-apex-homework-Bus";
 
 export function MyStack({ stack, app }: StackContext) {
   const {
@@ -18,21 +23,17 @@ export function MyStack({ stack, app }: StackContext) {
     SLACK_BOT_TOKEN,
     SLACK_CHANNEL_ID,
     UPLOAD_EXPIRES,
+    // EVENT_BUS_NAME,
   } = use(ConfigStack);
   const bind = [
     SLACK_SIGNING_SECRET,
     SLACK_BOT_TOKEN,
     SLACK_CHANNEL_ID,
     UPLOAD_EXPIRES,
+    // EVENT_BUS_NAME,
   ];
 
-  // queues
-  const flowStartQueue = new Queue(stack, 'flow-start-queue');
-  const createMomentQueue = new Queue(stack, 'create-moment-queue');
-  const channelUsersQueue = new Queue(stack, 'channel-users-queue');
-  const uploadLinkQueue = new Queue(stack, 'upload-link-queue');
-  const sendDmQueue = new Queue(stack, 'send-dm-queue');
-
+  // S3 Bucket setup
   const bucket = new Bucket(stack, 'my-beconnected-bucket', {
     cdk: {
       bucket: {
@@ -52,7 +53,7 @@ export function MyStack({ stack, app }: StackContext) {
         function: {
           // srcPath: "src/",
           handler: "services/lambdas/process-upload.handler",
-          environment: { SLACK_SIGNING_SECRET: '801adc8c32e95bc2746de291c5f1f7d1' },
+          environment: { slackSigningSecret: SLACK_SIGNING_SECRET.value },
           permissions: ['s3'],
           bind
         },
@@ -61,7 +62,7 @@ export function MyStack({ stack, app }: StackContext) {
       },
     },
   });
-  bucket.attachPermissions([bucket]);
+  bucket.attachPermissions([bucket, "s3"]);
 
   // frontend
   const site = new StaticSite(stack, 'ViteSite', {
@@ -75,13 +76,88 @@ export function MyStack({ stack, app }: StackContext) {
     : site.url;
 
 
+  // EventBus setup
+  const eventBusDefaultPermissions = [
+    new iam.PolicyStatement({
+      actions: ["events:PutEvents"],
+      resources: [EVENT_BUS_NAME],
+    })
+  ]
+  const bus = new EventBus(stack, "Bus", {
+    rules: {
+      flowStartRule: {
+        pattern: { source: ["flowStartEvent"] },
+        targets: {  
+          function: {
+            handler: "services/lambdas/flow-start.handler",
+            environment: { eventBusName: EVENT_BUS_NAME, },
+            permissions: eventBusDefaultPermissions,
+          }
+        },
+      },
+      createMomentRule: {
+        pattern: { source: ["createMomentEvent"] },
+        targets: {  
+          function: {
+            handler: "services/lambdas/create-moment.handler",
+            environment: { eventBusName: EVENT_BUS_NAME, },
+            permissions: eventBusDefaultPermissions,
+          }
+        },
+      },
+      channelUsersQueueUrlRule: {
+        pattern: { source: ["channelUsersQueueUrlEvent"] },
+        targets: { 
+          function: {
+            handler: "services/lambdas/channel-users.handler",
+            environment: { eventBusName: EVENT_BUS_NAME, },
+            permissions: eventBusDefaultPermissions,
+          }
+          },
+      },
+      uploadLinkRule: {
+        pattern: { source: ["uploadLinkEvent"] },
+        targets: { 
+          function: {
+            handler: "services/lambdas/upload-link.handler",
+            environment: { 
+              eventBusName: EVENT_BUS_NAME,
+              bucketName: bucket.bucketName
+            },
+            permissions: eventBusDefaultPermissions,
+          }
+          },
+      },
+      sendDmMessageRule: {
+        pattern: { source: ["sendDmMessageEvent"] },
+        targets: { 
+          function: {
+            handler: "services/lambdas/send-dm.handler",
+            environment: { 
+              eventBusName: EVENT_BUS_NAME,
+              siteUrl
+            },
+            permissions: eventBusDefaultPermissions,
+          }
+          },
+      }
+    },
+    bind
+  });
+
+  bus.bind(bind)
+  bus.attachPermissions([bucket, "events:PutEvents"])
+
+
+
   const dailyNotificationRuleName = `${app.stage}-daily-notification-rule`;
   const triggerMomentHandler: FunctionDefinition = {
     handler: 'services/lambdas/cron.handler',
     bind,
     environment: {
-      flowStartQueueUrl: flowStartQueue.queueUrl,
+      // flowStartQueueUrl: flowStartQueue.queueUrl,
       cloudwatchRuleName: dailyNotificationRuleName,
+      eventBusName: EVENT_BUS_NAME.value
     },
     permissions: '*',
   };
@@ -92,9 +168,10 @@ export function MyStack({ stack, app }: StackContext) {
         function: {
           handler: 'services/lambdas/cron.handler',
           timeout: 15,
+          bind,
           environment: {
-            flowStartQueueUrl: flowStartQueue.queueUrl,
             cloudwatchRuleName: dailyNotificationRuleName,
+            eventBusName: EVENT_BUS_NAME,
           },
           permissions: '*',
         },
@@ -114,71 +191,10 @@ export function MyStack({ stack, app }: StackContext) {
     },
   });
 
-  // consumers
-  flowStartQueue.addConsumer(stack, {
-    function: {
-      handler: 'services/lambdas/flow-start.handler',
-      bind,
-      environment: {
-        createMomentQueueUrl: createMomentQueue.queueUrl,
-      },
-      permissions: [createMomentQueue],
-    },
-    cdk: { eventSource: { batchSize: 1 } },
-  });
-
-  createMomentQueue.addConsumer(stack, {
-    function: {
-      handler: 'services/lambdas/create-moment.handler',
-      bind,
-      environment: {
-        channelUsersQueueUrl: channelUsersQueue.queueUrl,
-      },
-      permissions: [channelUsersQueue],
-    },
-    cdk: { eventSource: { batchSize: 1 } },
-  });
-
-  channelUsersQueue.addConsumer(stack, {
-    function: {
-      handler: 'services/lambdas/channel-users.handler',
-      bind,
-      environment: {
-        uploadLinkQueueUrl: uploadLinkQueue.queueUrl,
-      },
-      permissions: [uploadLinkQueue],
-    },
-    cdk: { eventSource: { batchSize: 1 } },
-  });
-
-  uploadLinkQueue.addConsumer(stack, {
-    function: {
-      handler: 'services/lambdas/upload-link.handler',
-      bind,
-      environment: {
-        sendDmQueueUrl: sendDmQueue.queueUrl,
-        bucketName: bucket.bucketName,
-        siteUrl,
-      },
-      permissions: [bucket, sendDmQueue],
-    },
-    cdk: { eventSource: { batchSize: 1 } },
-  });
-
-  sendDmQueue.addConsumer(stack, {
-    function: {
-      handler: 'services/lambdas/send-dm.handler',
-      bind,
-      environment: {
-        siteUrl,
-      },
-    },
-    cdk: { eventSource: { batchSize: 1 } },
-  });
-
   stack.addOutputs({
     SiteUrl: siteUrl,
     SlackCommandAPI: slackCommandsApi.url,
     BucketName: bucket.bucketName,
+    EventBridgeArnName: bus.eventBusArn
   });
 }

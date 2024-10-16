@@ -1,31 +1,18 @@
-import { CloudWatchEvents, SQS } from 'aws-sdk';
+import { CloudWatchEvents } from 'aws-sdk';
 import {
   convertDateToCronExpression,
   getNextNotificationDate,
 } from 'domain/scheduler';
-import { FlowStartMessageBody } from './types';
+import { triggerEvent } from './utils';
 
 export const handler = async () => {
+  const eventBusName = String(process.env.eventBusName);
   const nextDate = await scheduleNextNotification();
-  await sendFlowStartMessage(nextDate);
-};
-
-const sendFlowStartMessage = async (nextDate: Date) => {
-  const flowStartQueueUrl = String(process.env.flowStartQueueUrl);
-
-  const queue = new SQS();
-  const flowStartMessageBody: FlowStartMessageBody = { nextDate };
-  return queue
-    .sendMessage({
-      QueueUrl: flowStartQueueUrl,
-      MessageBody: JSON.stringify(flowStartMessageBody),
-    })
-    .promise();
+  await triggerEvent({nextDate}, 'flowStartEvent', eventBusName)
 };
 
 export const scheduleNextNotification = async (): Promise<Date> => {
   const cloudwatchevents = new CloudWatchEvents();
-
   const nextDate = getNextNotificationDate({});
   const scheduleExpression = convertDateToCronExpression(nextDate);
 
