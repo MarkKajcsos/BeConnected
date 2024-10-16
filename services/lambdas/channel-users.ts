@@ -3,9 +3,11 @@ import { getSlackChannelUsers } from 'slack/getChannelUsers';
 import { ChannelUsersMessageBody, UploadLinkMessageBody } from './types';
 import { triggerEvent } from './utils';
 
-export const handler = async (event: EventBridgeEvent<'ChannelUsers', ChannelUsersMessageBody>) => {
-    const users = await getChannelUsers(event.detail);
-    await triggerEvents(users)
+export const handler = async (
+  event: EventBridgeEvent<'ChannelUsers', ChannelUsersMessageBody>
+) => {
+  const users = await getChannelUsers(event.detail);
+  await triggerEvents(users);
 };
 
 const getChannelUsers = async (
@@ -20,10 +22,9 @@ const getChannelUsers = async (
 };
 
 const triggerEvents = async (users: UploadLinkMessageBody[]) => {
-  const eventBusName = String(process.env.eventBusName)
+  const eventBusName = String(process.env.eventBusName);
   for (const user of users) {
     // TODO: make it parallel
-    await triggerEvent(user, 'uploadLinkEvent', eventBusName)
-
+    await triggerEvent(user, 'uploadLinkEvent', eventBusName);
   }
 };

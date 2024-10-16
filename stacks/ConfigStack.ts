@@ -15,6 +15,6 @@ export default function ConfigStack({ stack }: StackContext) {
     SLACK_BOT_TOKEN,
     SLACK_CHANNEL_ID,
     UPLOAD_EXPIRES,
-    EVENT_BUS_NAME
+    EVENT_BUS_NAME,
   };
 }

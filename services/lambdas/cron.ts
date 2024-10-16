@@ -8,7 +8,7 @@ import { triggerEvent } from './utils';
 export const handler = async () => {
   const eventBusName = String(process.env.eventBusName);
   const nextDate = await scheduleNextNotification();
-  await triggerEvent({nextDate}, 'flowStartEvent', eventBusName)
+  await triggerEvent({ nextDate }, 'flowStartEvent', eventBusName);
 };
 
 export const scheduleNextNotification = async (): Promise<Date> => {

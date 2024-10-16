@@ -12,12 +12,11 @@ export const Review: React.FC = () => {
     dispatchAppStateAction({
       type: TakePhotoActions.START_UPLOAD,
     });
-  
+
   const reCaptureEnv = () =>
     dispatchAppStateAction({
       type: TakePhotoActions.INITIALIZED,
     });
-
 
   return (
     <Container>

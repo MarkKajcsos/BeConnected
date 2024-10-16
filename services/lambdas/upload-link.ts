@@ -1,12 +1,22 @@
 import { EventBridgeEvent } from 'aws-lambda';
 import { S3 } from 'aws-sdk';
-import { UploadLinkMessageBody, S3ImageMetaData, SendDmMessageBody } from './types';
+import {
+  UploadLinkMessageBody,
+  S3ImageMetaData,
+  SendDmMessageBody,
+} from './types';
 import { triggerEvent } from './utils';
 
-export const handler = async (event: EventBridgeEvent<'UploadLink', UploadLinkMessageBody>) => {
-  const eventBusName = String(process.env.eventBusName)
+export const handler = async (
+  event: EventBridgeEvent<'UploadLink', UploadLinkMessageBody>
+) => {
+  const eventBusName = String(process.env.eventBusName);
   const s3UploadLink = await createS3UploadLink(event.detail);
-  await triggerEvent<SendDmMessageBody>(s3UploadLink, 'sendDmMessageEvent', eventBusName)
+  await triggerEvent<SendDmMessageBody>(
+    s3UploadLink,
+    'sendDmMessageEvent',
+    eventBusName
+  );
 };
 
 const createS3UploadLink = async ({
@@ -38,10 +48,10 @@ const createS3UploadLink = async ({
     ContentType: 'image/*',
     Metadata: metaData,
   });
-  
+
   return {
     clientSlackSecret,
     userId,
     uploadLink,
-  }
+  };
 };

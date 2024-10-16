@@ -4,19 +4,19 @@ import { generateMessage } from './utils';
 export type SendImageInThreadParams = {
   clientSlackSecret: string;
   userId: string;
-  channelId: string; 
-  threadTs: string; 
+  channelId: string;
+  threadTs: string;
   messageHeader: string;
   imageUrl: string;
-}
+};
 
 export const sendImageInReplyMessage = async ({
   clientSlackSecret,
   userId,
-  channelId, 
-  threadTs, 
+  channelId,
+  threadTs,
   messageHeader,
-  imageUrl
+  imageUrl,
 }: SendImageInThreadParams) => {
   const app = getApp(clientSlackSecret);
 
@@ -33,4 +33,3 @@ export const sendImageInReplyMessage = async ({
     ).blocks,
   });
 };
-

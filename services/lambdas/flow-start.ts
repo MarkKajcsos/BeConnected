@@ -7,9 +7,11 @@ import {
 import { Config } from 'sst/node/config';
 import { triggerEvent } from './utils';
 
-export const handler = async (event: EventBridgeEvent<'FlowStart', FlowStartMessageBody>) => {
+export const handler = async (
+  event: EventBridgeEvent<'FlowStart', FlowStartMessageBody>
+) => {
   const clients = getClients();
-  const { nextDate } = event.detail
+  const { nextDate } = event.detail;
   await sendFlowStartMessage(nextDate, clients);
 };
 
@@ -20,7 +22,11 @@ const sendFlowStartMessage = async (nextDate: Date, clients: ClientData[]) => {
       nextDate,
       ...client,
     };
-    await triggerEvent(createMomentMessageBody, 'createMomentEvent', eventBusName)
+    await triggerEvent(
+      createMomentMessageBody,
+      'createMomentEvent',
+      eventBusName
+    );
   }
 };
 

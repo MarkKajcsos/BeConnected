@@ -3,7 +3,9 @@ import { sendDmMessage } from 'slack/sendDmMessage';
 import { makeShortLinkText } from 'slack/utils';
 import { SendDmMessageBody } from './types';
 
-export const handler = async (event: EventBridgeEvent<'SendDmMessage', SendDmMessageBody>) => {
+export const handler = async (
+  event: EventBridgeEvent<'SendDmMessage', SendDmMessageBody>
+) => {
   const siteUrl = String(process.env.siteUrl);
   const appUrl = `${siteUrl}?uploadUrl=${encodeURIComponent(
     event.detail.uploadLink
