@@ -3,7 +3,6 @@ import {
   Bucket,
   Cron,
   FunctionDefinition,
-  Queue,
   StackContext,
   StaticSite,
   use,
@@ -14,24 +13,18 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 
 import ConfigStack from './ConfigStack';
 
-// TODO: move to .env or Config.secret
-const EVENT_BUS_NAME =
-  'arn:aws:events:eu-central-1:307946669175:event-bus/markkajcsos-apex-homework-Bus';
-
 export function MyStack({ stack, app }: StackContext) {
   const {
     SLACK_SIGNING_SECRET,
     SLACK_BOT_TOKEN,
     SLACK_CHANNEL_ID,
     UPLOAD_EXPIRES,
-    // EVENT_BUS_NAME,
   } = use(ConfigStack);
   const bind = [
     SLACK_SIGNING_SECRET,
     SLACK_BOT_TOKEN,
     SLACK_CHANNEL_ID,
     UPLOAD_EXPIRES,
-    // EVENT_BUS_NAME,
   ];
 
   // S3 Bucket setup
@@ -52,14 +45,11 @@ export function MyStack({ stack, app }: StackContext) {
     notifications: {
       uploadNotification: {
         function: {
-          // srcPath: "src/",
           handler: 'services/lambdas/process-upload.handler',
-          environment: { slackSigningSecret: SLACK_SIGNING_SECRET.value },
           permissions: ['s3'],
           bind,
         },
         events: ['object_created'],
-        bind,
       },
     },
   });
@@ -76,90 +66,92 @@ export function MyStack({ stack, app }: StackContext) {
         .public_url
     : site.url;
 
-  // EventBus setup
+
+    // EventBus setup
+  const eventBus = new EventBus(stack, "MyEventBus");
+  
   const eventBusDefaultPermissions = [
     new iam.PolicyStatement({
       actions: ['events:PutEvents'],
-      resources: [EVENT_BUS_NAME],
+      resources: [eventBus.eventBusArn],
     }),
   ];
-  const bus = new EventBus(stack, 'Bus', {
-    rules: {
-      flowStartRule: {
-        pattern: { source: ['flowStartEvent'] },
-        targets: {
-          function: {
-            handler: 'services/lambdas/flow-start.handler',
-            environment: { eventBusName: EVENT_BUS_NAME },
-            permissions: eventBusDefaultPermissions,
-          },
-        },
-      },
-      createMomentRule: {
-        pattern: { source: ['createMomentEvent'] },
-        targets: {
-          function: {
-            handler: 'services/lambdas/create-moment.handler',
-            environment: { eventBusName: EVENT_BUS_NAME },
-            permissions: eventBusDefaultPermissions,
-          },
-        },
-      },
-      channelUsersQueueUrlRule: {
-        pattern: { source: ['channelUsersQueueUrlEvent'] },
-        targets: {
-          function: {
-            handler: 'services/lambdas/channel-users.handler',
-            environment: { eventBusName: EVENT_BUS_NAME },
-            permissions: eventBusDefaultPermissions,
-          },
-        },
-      },
-      uploadLinkRule: {
-        pattern: { source: ['uploadLinkEvent'] },
-        targets: {
-          function: {
-            handler: 'services/lambdas/upload-link.handler',
-            environment: {
-              eventBusName: EVENT_BUS_NAME,
-              bucketName: bucket.bucketName,
-            },
-            permissions: eventBusDefaultPermissions,
-          },
-        },
-      },
-      sendDmMessageRule: {
-        pattern: { source: ['sendDmMessageEvent'] },
-        targets: {
-          function: {
-            handler: 'services/lambdas/send-dm.handler',
-            environment: {
-              eventBusName: EVENT_BUS_NAME,
-              siteUrl,
-            },
-            permissions: eventBusDefaultPermissions,
-          },
+
+  eventBus.addRules(stack, {
+    flowStartRule: {
+      pattern: { source: ['flowStartEvent'] },
+      targets: {
+        function: {
+          handler: 'services/lambdas/flow-start.handler',
+          environment: { eventBusName: eventBus.eventBusArn },
+          permissions: eventBusDefaultPermissions,
         },
       },
     },
-    bind,
+    createMomentRule: {
+      pattern: { source: ['createMomentEvent'] },
+      targets: {
+        function: {
+          handler: 'services/lambdas/create-moment.handler',
+          environment: { eventBusName: eventBus.eventBusArn },
+          permissions: eventBusDefaultPermissions,
+        },
+      },
+    },
+    channelUsersQueueUrlRule: {
+      pattern: { source: ['channelUsersQueueUrlEvent'] },
+      targets: {
+        function: {
+          handler: 'services/lambdas/channel-users.handler',
+          environment: { eventBusName: eventBus.eventBusArn },
+          permissions: eventBusDefaultPermissions,
+        },
+      },
+    },
+    uploadLinkRule: {
+      pattern: { source: ['uploadLinkEvent'] },
+      targets: {
+        function: {
+          handler: 'services/lambdas/upload-link.handler',
+          environment: {
+            eventBusName: eventBus.eventBusArn,
+            bucketName: bucket.bucketName,
+          },
+          permissions: eventBusDefaultPermissions,
+        },
+      },
+    },
+    sendDmMessageRule: {
+      pattern: { source: ['sendDmMessageEvent'] },
+      targets: {
+        function: {
+          handler: 'services/lambdas/send-dm.handler',
+          environment: {
+            eventBusName: eventBus.eventBusArn,
+            siteUrl,
+          },
+          permissions: eventBusDefaultPermissions,
+        },
+      },
+    },
   });
+  eventBus.bind(bind);
+  eventBus.attachPermissions([bucket, 'events:PutEvents']);
 
-  bus.bind(bind);
-  bus.attachPermissions([bucket, 'events:PutEvents']);
-
+  // Handler for cron job
   const dailyNotificationRuleName = `${app.stage}-daily-notification-rule`;
   const triggerMomentHandler: FunctionDefinition = {
     handler: 'services/lambdas/cron.handler',
     bind,
     environment: {
-      // flowStartQueueUrl: flowStartQueue.queueUrl,
       cloudwatchRuleName: dailyNotificationRuleName,
-      eventBusName: EVENT_BUS_NAME.value,
+      eventBusName: eventBus.eventBusArn,
+      
     },
     permissions: '*',
   };
 
+  // API to trigger capture now function
   const slackCommandsApi = new Api(stack, 'Api', {
     routes: {
       'POST /slack/capture-now': {
@@ -169,7 +161,7 @@ export function MyStack({ stack, app }: StackContext) {
           bind,
           environment: {
             cloudwatchRuleName: dailyNotificationRuleName,
-            eventBusName: EVENT_BUS_NAME,
+            eventBusName: eventBus.eventBusArn,
           },
           permissions: '*',
         },
@@ -181,6 +173,7 @@ export function MyStack({ stack, app }: StackContext) {
     },
   });
 
+  // Cron job to trigger moment handler
   new Cron(stack, 'Cron', {
     schedule: 'rate(1 minute)',
     cdk: { rule: { ruleName: dailyNotificationRuleName } },
@@ -189,10 +182,11 @@ export function MyStack({ stack, app }: StackContext) {
     },
   });
 
+  // Print out some stack info
   stack.addOutputs({
     SiteUrl: siteUrl,
     SlackCommandAPI: slackCommandsApi.url,
     BucketName: bucket.bucketName,
-    EventBridgeArnName: bus.eventBusArn,
+    EventBridgeArnName: eventBus.eventBusArn,
   });
 }
