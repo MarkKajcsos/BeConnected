@@ -11,6 +11,8 @@
     "frontend:start": "cd frontend && pnpm dev",
     "build": "sst build",
     "deploy": "sst deploy",
+    "deploy:prod": "sst deploy --stage prod",
+    "deploy:dev": "sst deploy --stage dev",
     "remove": "sst remove",
     "console": "sst console",
     "typecheck": "tsc --noEmit",
