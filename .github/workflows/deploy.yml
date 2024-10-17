@@ -18,7 +18,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: 'pnpm'
 
       - name: Install pnpm
         run: npm install -g pnpm
@@ -30,4 +29,4 @@ jobs:
         run: pnpm run build
 
       - name: Deploy to production
-        run: pnpm run deploy:prod  # This now uses the correct stage
+        run: pnpm run deploy:prod
