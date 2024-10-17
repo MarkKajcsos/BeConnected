@@ -1,0 +1,38 @@
+name: Lint and Test
+
+on:
+  pull_request:
+    branches:
+      - main
+      - '**'
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # Install pnpm
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      # Install dependencies
+      - name: Install dependencies
+        run: pnpm install
+
+      # Run linting
+      - name: Run Biome Lint
+        run: pnpm lint
+
+      # Run tests (if exists)
+      - name: Run Tests
+        run: pnpm test --if-present
