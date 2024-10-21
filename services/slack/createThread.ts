@@ -4,11 +4,12 @@ import { ClientData } from '../lambdas/types';
 export const createThread = async ({
   clientSlackSecret,
   clientChannelId,
+  clientName
 }: ClientData) => {
   const app = getApp(clientSlackSecret);
 
   return app.client.chat.postMessage({
     channel: clientChannelId,
-    text: `C'mon show me what you got! 📸`,
+    text: `${clientName} show me what you got! 📸`,
   });
 };

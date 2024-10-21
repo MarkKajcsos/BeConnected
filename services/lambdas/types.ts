@@ -42,11 +42,14 @@ export type SendDmMessageBody = {
   userId: string;
 };
 
-// !
 export type S3ImageMetaData = {
   clientslacksecret: string;
   threadid: string;
   clientchannelid: string;
   userid: string;
   timestamp: string;
+};
+
+export type PreviewChannelMessageBody = {
+  prNumber: string;
 };
