@@ -7,33 +7,29 @@ on:
 
 jobs:
   deploy:
+  
+    if: github.event.label.name == ':rocket: deploy'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        if: github.event.label.name == ':rocket: deploy'
         uses: actions/checkout@v3
 
       - name: Set up Node.js
-        if: github.event.label.name == ':rocket: deploy'
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
       - name: Install pnpm
-        if: github.event.label.name == ':rocket: deploy'
         run: npm install -g pnpm
 
       - name: Install dependencies
-        if: github.event.label.name == ':rocket: deploy'
         run: pnpm install
 
       - name: Run build
-        if: github.event.label.name == ':rocket: deploy'
         run: pnpm run build
 
       - name: Deploy preview environment
-        if: github.event.label.name == ':rocket: deploy'
         run: pnpm run deploy:preview
         env:
 
@@ -48,7 +44,6 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
     
       - name: Create Slack channel
-        if: github.event.label.name == ':rocket: deploy'
         run: aws lambda invoke --function-name create-slack-preview-channel --payload '{"prNumber": "${{ github.event.pull_request.number }}"}' response.json
 
   cleanup:
