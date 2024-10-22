@@ -44,11 +44,11 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
     
       - name: Create Slack channel
-        run: aws lambda invoke --function-name create-slack-preview-channel --payload '::escapeProperty::${{'{"prNumber": "${{ github.event.pull_request.number }}"}'}}' response.json
+        run: aws lambda invoke --function-name create-slack-preview-channel response.json
 
   cleanup:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Delete Slack channel
-        run: aws lambda invoke --function-name delete-slack-preview-channel --payload '::escapeProperty::${{'{"prNumber": "${{ github.event.pull_request.number }}"}'}}' response.json
+        run: aws lambda invoke --function-name delete-slack-preview-channel response.json
