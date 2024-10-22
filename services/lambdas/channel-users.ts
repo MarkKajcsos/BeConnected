@@ -1,15 +1,13 @@
-import { SQSHandler } from 'aws-lambda';
-import { SQS } from 'aws-sdk';
+import { EventBridgeEvent, SQSHandler } from 'aws-lambda';
 import { getSlackChannelUsers } from 'slack/getChannelUsers';
 import { ChannelUsersMessageBody, UploadLinkMessageBody } from './types';
+import { triggerEvent } from './utils';
 
-export const handler: SQSHandler = async (event) => {
-  const queue = new SQS();
-  for (const record of event.Records) {
-    const recordBody = JSON.parse(record.body) as ChannelUsersMessageBody;
-    const users = await getChannelUsers(recordBody);
-    await pushChannelUsersToNextQueue(queue, users);
-  }
+export const handler = async (
+  event: EventBridgeEvent<'ChannelUsers', ChannelUsersMessageBody>
+) => {
+  const users = await getChannelUsers(event.detail);
+  await triggerEvents(users);
 };
 
 const getChannelUsers = async (
@@ -23,17 +21,10 @@ const getChannelUsers = async (
   }));
 };
 
-const pushChannelUsersToNextQueue = async (
-  queue: SQS,
-  users: UploadLinkMessageBody[]
-) => {
-  const uploadLinkQueueUrl = String(process.env.uploadLinkQueueUrl);
+const triggerEvents = async (users: UploadLinkMessageBody[]) => {
+  const eventBusName = String(process.env.eventBusName);
   for (const user of users) {
-    await queue
-      .sendMessage({
-        QueueUrl: uploadLinkQueueUrl,
-        MessageBody: JSON.stringify(user),
-      })
-      .promise();
+    // TODO: make it parallel
+    await triggerEvent(user, 'uploadLinkEvent', eventBusName);
   }
 };

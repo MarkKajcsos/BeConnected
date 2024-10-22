@@ -9,6 +9,6 @@ export const createThread = async ({
 
   return app.client.chat.postMessage({
     channel: clientChannelId,
-    text: `C'mon show me what you got! 📸`,
+    text: "C'mon show me what you got! 📸",
   });
 };

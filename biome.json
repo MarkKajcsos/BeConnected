@@ -12,7 +12,8 @@
       "node_modules",
       "**/sst-env.d.ts",
       ".sst/**",
-      ".build/**",
+      "**/build/**",
+      "./frontend/dist/",
       ".idea/**"
     ]
   },
@@ -83,6 +84,7 @@
       "**/sst-env.d.ts",
       ".sst/**",
       ".build/**",
+      "./frontend/dist/",
       ".idea/**"
     ]
   },

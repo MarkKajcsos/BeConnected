@@ -1,37 +1,32 @@
-import { SQSHandler } from 'aws-lambda';
-import { SQS } from 'aws-sdk';
+import { EventBridgeEvent, SQSHandler } from 'aws-lambda';
 import {
   ClientData,
   CreateMomentMessageBody,
   FlowStartMessageBody,
 } from './types';
 import { Config } from 'sst/node/config';
+import { triggerEvent } from './utils';
 
-export const handler: SQSHandler = async (event) => {
+export const handler = async (
+  event: EventBridgeEvent<'FlowStart', FlowStartMessageBody>
+) => {
   const clients = getClients();
-
-  for (const record of event.Records) {
-    const { nextDate } = JSON.parse(record.body) as FlowStartMessageBody;
-    await sendFlowStartMessage(nextDate, clients);
-  }
+  const { nextDate } = event.detail;
+  await sendFlowStartMessage(nextDate, clients);
 };
 
 const sendFlowStartMessage = async (nextDate: Date, clients: ClientData[]) => {
-  const createMomentQueueUrl = String(process.env.createMomentQueueUrl);
-  const queue = new SQS();
-
+  const eventBusName = String(process.env.eventBusName);
   for (const client of clients) {
     const createMomentMessageBody: CreateMomentMessageBody = {
       nextDate,
       ...client,
     };
-
-    await queue
-      .sendMessage({
-        QueueUrl: createMomentQueueUrl,
-        MessageBody: JSON.stringify(createMomentMessageBody),
-      })
-      .promise();
+    await triggerEvent(
+      createMomentMessageBody,
+      'createMomentEvent',
+      eventBusName
+    );
   }
 };
 
