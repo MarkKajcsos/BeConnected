@@ -7,8 +7,8 @@ on:
 
 jobs:
   deploy:
-    if: '::escapeProperty::${{github.event.label.name}}' == '::escapeProperty::${{'rocket: deploy'}}'
-    # if: contains(github.event.label.name, 'deploy')
+    if: ::escapeProperty::${{github.event.label.name}} == ::escapeProperty::'rocket: deploy'
+    # if: github.event.label.name == 'rocket: deploy'
     runs-on: ubuntu-latest
 
     steps:
