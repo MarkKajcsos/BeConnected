@@ -2,7 +2,7 @@ import { getApp } from './app';
 
 export const deletePreviewChannel = async ({
   clientSlackSecret,
-  channelName
+  channelName,
 }: any) => {
   const app = getApp(clientSlackSecret);
 
@@ -20,6 +20,6 @@ export const deletePreviewChannel = async ({
       channel: channel.id,
     });
   } catch (error: any) {
-    throw new Error(`Slack channel delete failed:`, error)
+    throw new Error(`Slack channel delete failed:`, error);
   }
 };

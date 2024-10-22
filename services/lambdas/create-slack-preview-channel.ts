@@ -1,11 +1,10 @@
-import { createPreviewChannel } from "slack/createPreviewChannel";
-import { PreviewChannelMessageBody } from "./types";
-
+import { createPreviewChannel } from 'slack/createPreviewChannel';
+import { PreviewChannelMessageBody } from './types';
 
 exports.handler = async (event: PreviewChannelMessageBody) => {
   try {
-    const channelName = `pr-${event.prNumber}-preview`
-    const response = await createPreviewChannel({...event, channelName})
+    const channelName = `pr-${event.prNumber}-preview`;
+    const response = await createPreviewChannel({ ...event, channelName });
 
     return {
       statusCode: 200,
@@ -16,7 +15,9 @@ exports.handler = async (event: PreviewChannelMessageBody) => {
   } catch (error: any) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: `Slack channel creation failed. ${error?.message ? `Error: ${error.message}` : ''}` }),
+      body: JSON.stringify({
+        error: `Slack channel creation failed. ${error?.message ? `Error: ${error.message}` : ''}`,
+      }),
     };
   }
 };

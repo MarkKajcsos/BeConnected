@@ -66,10 +66,9 @@ export function MyStack({ stack, app }: StackContext) {
         .public_url
     : site.url;
 
+  // EventBus setup
+  const eventBus = new EventBus(stack, 'MyEventBus');
 
-    // EventBus setup
-  const eventBus = new EventBus(stack, "MyEventBus");
-  
   const eventBusDefaultPermissions = [
     new iam.PolicyStatement({
       actions: ['events:PutEvents'],
@@ -146,7 +145,6 @@ export function MyStack({ stack, app }: StackContext) {
     environment: {
       cloudwatchRuleName: dailyNotificationRuleName,
       eventBusName: eventBus.eventBusArn,
-      
     },
     permissions: '*',
   };

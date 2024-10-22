@@ -8,7 +8,7 @@ export default {
     region: 'eu-central-1',
   }),
   stacks: (app) => {
-    if (app.stage === "prod") {
+    if (app.stage === 'prod') {
       app.setDefaultFunctionProps({
         runtime: 'nodejs20.x',
         nodejs: {
