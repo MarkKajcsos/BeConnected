@@ -11,29 +11,29 @@ jobs:
 
     steps:
       - name: Checkout code
-        if: contains(github.event.label.name, ':rocket: deploy')
+        if: github.event.label.name == ':rocket: deploy'
         uses: actions/checkout@v3
 
       - name: Set up Node.js
-        if: contains(github.event.label.name, ':rocket: deploy')
+        if: github.event.label.name == ':rocket: deploy'
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
       - name: Install pnpm
-        if: contains(github.event.label.name, ':rocket: deploy')
+        if: github.event.label.name == ':rocket: deploy'
         run: npm install -g pnpm
 
       - name: Install dependencies
-        if: contains(github.event.label.name, ':rocket: deploy')
+        if: github.event.label.name == ':rocket: deploy'
         run: pnpm install
 
       - name: Run build
-        if: contains(github.event.label.name, ':rocket: deploy')
+        if: github.event.label.name == ':rocket: deploy'
         run: pnpm run build
 
       - name: Deploy preview environment
-        if: contains(github.event.label.name, ':rocket: deploy')
+        if: github.event.label.name == ':rocket: deploy'
         run: pnpm run deploy:preview
         env:
 
@@ -48,7 +48,7 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
     
       - name: Create Slack channel
-        if: contains(github.event.label.name, ':rocket: deploy')
+        if: github.event.label.name == ':rocket: deploy'
         run: aws lambda invoke --function-name create-slack-preview-channel --payload '{"prNumber": "${{ github.event.pull_request.number }}"}' response.json
 
   cleanup:
