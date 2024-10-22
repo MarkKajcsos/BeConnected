@@ -5,7 +5,7 @@ import { deletePreviewChannel } from "slack/deletePreviewChannel";
 exports.handler = async (event: PreviewChannelMessageBody) => {
   try {
     const channelName = `pr-${event.prNumber}-preview`
-    const response = await deletePreviewChannel({...event, channelName})
+    await deletePreviewChannel({...event, channelName})
 
     return {
       statusCode: 200,
