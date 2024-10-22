@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
   
-    if: github.event.label.name == ':rocket: deploy'
+    if: contains(github.event.label.name, 'deploy')
     runs-on: ubuntu-latest
 
     steps:
