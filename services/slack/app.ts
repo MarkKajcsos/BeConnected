@@ -3,7 +3,7 @@ import { App, LogLevel } from '@slack/bolt';
 
 export const getApp = (secret: string) => {
   const app = new App({
-    signingSecret: secret ?? Config.SLACK_SIGNING_SECRET,
+    signingSecret: secret ?? Config.SLACK_SIGNING_SECRET, //TODO: use only secret param
     token: Config.SLACK_BOT_TOKEN,
     logLevel: LogLevel.DEBUG,
   });
