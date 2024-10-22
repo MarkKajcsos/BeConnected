@@ -51,5 +51,6 @@ export type S3ImageMetaData = {
 };
 
 export type PreviewChannelMessageBody = {
+  clientSlackSecret: string;
   prNumber: string;
 };

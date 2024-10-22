@@ -1,16 +1,16 @@
-import { createPreviewChannel } from "slack/createPreviewChannel";
 import { PreviewChannelMessageBody } from "./types";
+import { deletePreviewChannel } from "slack/deletePreviewChannel";
 
 
 exports.handler = async (event: PreviewChannelMessageBody) => {
   try {
     const channelName = `pr-${event.prNumber}-preview`
-    const response = await createPreviewChannel({...event, channelName})
+    const response = await deletePreviewChannel({...event, channelName})
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: `Slack channel created: ${response.channel ? response.channel.name : ''}`,
+        message: 'Slack channel archived',
       }),
     };
   } catch (error: any) {
