@@ -23,12 +23,14 @@
     "test-watch": "sst load-config -- vitest watch",
     "lint": "biome lint --write .",
     "lint:staged": "biome check --error-on-warnings --no-errors-on-unmatched --staged --write",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "start:all": "concurrently \"pnpm frontend:start\" \"pnpm ngrok:start\" \"pnpm sst:start\""
   },
   "devDependencies": {
     "@biomejs/biome": "1.8.3",
     "@ngrok/ngrok": "^1.4.1",
     "aws-cdk-lib": "^2.152.0",
+    "concurrently": "^9.0.1",
     "constructs": "^10.3.0",
     "dotenv": "^16.3.1",
     "got": "^12.6.1",
