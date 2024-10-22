@@ -1,13 +1,18 @@
 
 
 ## Overview
-This document serves as a side note for the reviewer, highlighting tasks where I encountered challenges or have specific observations.
+This document serves as a side note for the reviewer, highlighting tasks where I encountered challenges or have some guide notes.
 
 ## Frontend
 
 #### Dessert: Dual camera photo
 I was unable to test this feature on my phone. When I pressed the Shoot button, a browser window popped up on my MacBook :D I'm not sure what happened, as I am still getting accustomed to the macOS and iOS environments.
 
+
+## Backend
+
+### Entree: PO's manual testing request
+I have created a ___Apex Homework - Mark.Kajcsos-Admin___ app in my slack api. This app has a _Slash Command_, called _/capture-now_. By calling this command from Slack and POST request is triggered to the path of the created AWS SlackCommandAPI. See the ___slackCommandsApi___ api in *MyStack.ts* file. AWS API calls into *cron.handler*, causing a "take a capture" event in slack channel.
 
 ## DevOps
 
