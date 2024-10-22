@@ -7,8 +7,8 @@ on:
 
 jobs:
   deploy:
-  
-    if: contains(github.event.label.name, 'deploy')
+    if: '::escapeProperty::${{github.event.label.name}}' == '::escapeProperty::${{'rocket: deploy'}}'
+    # if: contains(github.event.label.name, 'deploy')
     runs-on: ubuntu-latest
 
     steps:
@@ -44,11 +44,11 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
     
       - name: Create Slack channel
-        run: aws lambda invoke --function-name create-slack-preview-channel response.json
+        run: aws lambda invoke --function-name create-slack-preview-channel --payload '::escapeProperty::${{'{"prNumber": "${{ github.event.pull_request.number }}"}'}}' response.json
 
   cleanup:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Delete Slack channel
-        run: aws lambda invoke --function-name delete-slack-preview-channel response.json
+        run: aws lambda invoke --function-name delete-slack-preview-channel --payload '::escapeProperty::${{'{"prNumber": "${{ github.event.pull_request.number }}"}'}}' response.json
